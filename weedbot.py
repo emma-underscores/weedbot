@@ -2,6 +2,7 @@ import yaml
 import json
 import time
 import sqlite3
+import logging
 
 from websocket import create_connection, WebSocketConnectionClosedException
 
@@ -16,6 +17,18 @@ class WeedBot:
         self.db = sqlite3.connect(self.cfg["db_path"])
         self._db_init()
 
+        # Set logging level with default of warning
+        log_level = logging.WARNING
+        if self.cfg["log_level"] == "debug":
+            log_level = logging.DEBUG
+        elif self.cfg["log_level"] == "info":
+            log_level = logging.INFO
+        elif self.cfg["log_level"] == "error":
+            log_level = logging.ERROR
+        elif self.cfg["log_level"] == "critical":
+            log_level = logging.CRITICAL
+        logging.basicConfig(filename=self.cfg["log_path"], level=log_level)
+
     def _db_init(self):
         try:
             self.db.execute("CREATE TABLE IF NOT EXISTS message ("
@@ -29,13 +42,14 @@ class WeedBot:
                             ");"
                             )
         except sqlite3.Error as e:
-            # TODO: reconnect/log
-            print("DB init failed.")
+            # TODO: reconnect
+            logging.critical("Could not initialize database: %s", e)
 
     def _connect(self):
         self.conn = create_connection("wss://euphoria.io/room/{}/ws".format(self.cfg["room"]))
 
     def _send_packet(self, packet):
+        logging.debug("Sending packet of type: %s", packet["type"])
         try:
             ret = self.conn.send(json.dumps(packet))
             self.data["msg_id"] += 1
@@ -43,10 +57,12 @@ class WeedBot:
         # TODO: handle reconnect delays better
         except WebSocketConnectionClosedException:
             time.sleep(3)
+            logging.warn("Connection closed. Attempting reconnect.")
             self._connect()
             return self._send_packet(packet)
 
     def _auth(self):
+        logging.debug("Sending authentication.")
         packet = {"type": "auth",
                   "data": {"type": "passcode",
                            "passcode": self.cfg["password"]},
@@ -56,18 +72,21 @@ class WeedBot:
     def _handle_ping(self, packet):
         # TODO: spin pruning off into separate process/thread
         self._prune_old()
+        logging.debug("Forming ping reply.")
         reply = {"type": "ping-reply",
                  "data": {"time": packet["time"]},
                  "id": str(self.data["msg_id"])}
         return self._send_packet(reply)
 
     def _set_nick(self):
+        logging.debug("Sending nick.")
         packet = {"type": "nick",
                   "data": {"name": self.cfg["nick"]},
                   "id": str(self.data["msg_id"])}
         return self._send_packet(packet)
 
     def _send_message(self, text, parent):
+        logging.debug("Sending message with text: %s", text)
         packet = {"type": "send",
                   "data": {"content": text,
                            "parent": parent},
@@ -75,9 +94,11 @@ class WeedBot:
         return self._send_packet(packet)
 
     def _handle_send_event(self, packet):
+        logging.debug("Received send-event.")
         self._log_send_event(packet)
 
     def _log_send_event(self, packet):
+        logging.debug("Logging send-event.")
         try:
             self.db.execute("INSERT INTO message VALUES (?, ?, ?, ?, ?, ?)",
                             (self.cfg["room"],
@@ -88,7 +109,7 @@ class WeedBot:
                             packet["content"]))
         # TODO: handle errors properly
         except sqlite3.Error as e:
-            print("Failed to record send-event.")
+            logging.error("Error logging send-event: %s", e)
 
     def _prune_old(self):
         expired = time.time() - self.cfg["expire_hours"] * 60 * 60
@@ -96,9 +117,10 @@ class WeedBot:
             self.db.execute("DELETE FROM message WHERE time < ?;", expired)
         # TODO: you know the drill...
         except sqlite3.Error as e:
-            print("Failed to prune old messages.")
-    #
+            logging.error("Error pruning old messages: %s", e)
+
     def _handle_comic(self, packet):
+        logging.debug("Processing !comic command.")
         parent = packet["parent"]
         limit = self.cfg["msg_limit"]
         curs = self.db.cursor()
@@ -111,6 +133,7 @@ class WeedBot:
 
 
     def _dispatch(self, packet):
+        logging.debug("Dispatching packet.")
         if self.data["type"] == "ping-event":
             self._handle_ping(packet)
         elif data["type"] == "send-event":
