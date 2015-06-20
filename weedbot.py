@@ -193,3 +193,21 @@ class WeedBot:
         elif self.data["type"] == "send-event":
             self._handle_send_event(packet)
 
+
+    def run(self):
+        logging.debug("Starting.")
+        self._set_nick()
+
+        while(True):
+            try:
+                rawdata = self.conn.recv()
+                packet = json.loads(rawdata)
+            except WebSocketConnectionClosedException:
+                sleep(3)
+                self._connect()
+            else:
+                self._dispatch(packet)
+
+if __name__ == "__main__":
+    weedbot = WeedBot()
+    weedbot.run()
