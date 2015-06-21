@@ -69,6 +69,12 @@ class WeedBot:
             db_path = self.cfg["db_path"]
         except KeyError:
             db_path = "weedbot.db"
+
+        try:
+            self.nick = self.cfg["nick"]
+        except KeyError:
+            self.nick = "WeedBot"
+
         self.db = sqlite3.connect(db_path)
         self._db_init()
 
@@ -124,14 +130,14 @@ class WeedBot:
         self._prune_old()
         logging.debug("Forming ping reply.")
         reply = {"type": "ping-reply",
-                 "data": {"time": packet["time"]},
+                 "data": {"time": packet["data"]["time"]},
                  "id": str(self.msg_id)}
         return self._send_packet(reply)
 
     def _set_nick(self):
         logging.debug("Sending nick.")
         packet = {"type": "nick",
-                  "data": {"name": self.cfg["nick"]},
+                  "data": {"name": self.nick},
                   "id": str(self.msg_id)}
         return self._send_packet(packet)
 
@@ -165,32 +171,39 @@ class WeedBot:
 
     def _prune_old(self):
         # get expiration time in seconds
-        expired = time.time() - self.expire_hours * 60 * 60
+        expired = int(time.time()) - self.expire_hours * 60 * 60
         try:
-            self.db.execute("DELETE FROM message WHERE time < ?;", expired)
-        # TODO: you know the drill...
+            self.db.execute("DELETE FROM message WHERE time < ?;", (expired,))
         except sqlite3.Error as e:
             logging.error("Error pruning old messages: %s", e)
-
+    # FIXME: Everything
+    # TODO: Handle root level comics
+    # TODO: convert to using bare cursor
     def _handle_comic(self, packet):
         logging.debug("Processing !comic command.")
-        parent = packet["parent"]
+        newest = packet["data"]["time"]
+        print(type(newest))
+        last_message_id = packet["data"]["parent"]
+        last_msg = self.db.execute("SELECT content, time, id, parent FROM message WHERE id = ?", (last_message_id,)).fetchone()
+        root_msg = self.db.execute("SELECT content, time, id FROM message WHERE id = ?", (last_msg[3],)).fetchone()
         limit = self.cfg["msg_limit"]
-        curs = self.db.cursor()
-        curs.execute("SELECT content, time FROM message WHERE parent = ? LIMIT ? ORDER BY time ASC", (parent, limit))
-        children = curs.fetchall()
-        curs.execute("SELECT content, time FROM message WHERE id = ?", parent)
-        messages = curs.fetchone()
-        messages.extend(children)
-        self._send_message("\n".join(str(message) for message in messages))
+        candidates = self.db.execute("SELECT content, time, id FROM message WHERE parent = ? AND time <= ? ORDER BY time ASC;",
+                                     (root_msg[2],
+                                      newest)).fetchall()
+        if len(candidates) < limit:
+            # not enough messages, get the parent
+            candidates = [root_msg] + candidates
+        # TODO filter messages by time
+
+        self._send_message(str(candidates), last_message_id)
 
 
     def _dispatch(self, packet):
         # TODO: Check for error/bounce packets, and replies with error field
         logging.debug("Dispatching packet.")
-        if self.data["type"] == "ping-event":
+        if packet["type"] == "ping-event":
             self._handle_ping_event(packet)
-        elif self.data["type"] == "send-event":
+        elif packet["type"] == "send-event":
             self._handle_send_event(packet)
 
 
