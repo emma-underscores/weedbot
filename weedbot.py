@@ -176,6 +176,7 @@ class WeedBot:
             self.db.execute("DELETE FROM message WHERE time < ?;", (expired,))
         except sqlite3.Error as e:
             logging.error("Error pruning old messages: %s", e)
+
     # FIXME: Everything
     # TODO: Handle root level comics
     # TODO: convert to using bare cursor
@@ -184,10 +185,10 @@ class WeedBot:
         newest = packet["data"]["time"]
         print(type(newest))
         last_message_id = packet["data"]["parent"]
-        last_msg = self.db.execute("SELECT content, time, id, parent FROM message WHERE id = ?", (last_message_id,)).fetchone()
-        root_msg = self.db.execute("SELECT content, time, id FROM message WHERE id = ?", (last_msg[3],)).fetchone()
+        last_msg = self.db.execute("SELECT content, time, id, parent, sender FROM message WHERE id = ?", (last_message_id,)).fetchone()
+        root_msg = self.db.execute("SELECT content, time, id, parent, sender FROM message WHERE id = ?", (last_msg[3],)).fetchone()
         limit = self.cfg["msg_limit"]
-        candidates = self.db.execute("SELECT content, time, id FROM message WHERE parent = ? AND time <= ? ORDER BY time ASC;",
+        candidates = self.db.execute("SELECT content, time, id, parent, sender FROM message WHERE parent = ? AND time <= ? ORDER BY time ASC;",
                                      (root_msg[2],
                                       newest)).fetchall()
         if len(candidates) < limit:
