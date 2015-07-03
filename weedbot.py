@@ -217,7 +217,7 @@ class WeedBot:
                 rawdata = self.conn.recv()
                 packet = json.loads(rawdata)
             except WebSocketConnectionClosedException:
-                sleep(3)
+                time.sleep(3)
                 self._connect()
             else:
                 self._dispatch(packet)
