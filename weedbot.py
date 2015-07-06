@@ -3,9 +3,13 @@ import json
 import time
 import sqlite3
 import logging
+import os
 import os.path
 
 from websocket import create_connection, WebSocketConnectionClosedException
+
+import ComicGenerator
+
 
 MAX_ERRORS = 5
 
@@ -76,7 +80,11 @@ class WeedBot:
             self.nick = "WeedBot"
 
         self.db = sqlite3.connect(db_path)
+        self.db.row_factory = sqlite3.Row
         self._db_init()
+
+        self.gen = ComicGenerator.ComicGenerator()
+
 
     def _increment_error_count(self):
         self.error_count += 1
@@ -186,17 +194,20 @@ class WeedBot:
         print(type(newest))
         last_message_id = packet["data"]["parent"]
         last_msg = self.db.execute("SELECT content, time, id, parent, sender FROM message WHERE id = ?", (last_message_id,)).fetchone()
-        root_msg = self.db.execute("SELECT content, time, id, parent, sender FROM message WHERE id = ?", (last_msg[3],)).fetchone()
+        root_msg = self.db.execute("SELECT content, time, id, parent, sender FROM message WHERE id = ?", (last_msg["parent"],)).fetchone()
+        print(root_msg)
         limit = self.cfg["msg_limit"]
         candidates = self.db.execute("SELECT content, time, id, parent, sender FROM message WHERE parent = ? AND time <= ? ORDER BY time ASC;",
-                                     (root_msg[2],
+                                     (root_msg["id"],
                                       newest)).fetchall()
         if len(candidates) < limit:
             # not enough messages, get the parent
             candidates = [root_msg] + candidates
         # TODO filter messages by time
 
-        self._send_message(str(candidates), last_message_id)
+
+        self.gen.make_comic(candidates)
+        # self._send_message(str(candidates), last_message_id)
 
 
     def _dispatch(self, packet):
@@ -221,6 +232,9 @@ class WeedBot:
                 self._connect()
             else:
                 self._dispatch(packet)
+
+
+
 
 if __name__ == "__main__":
     weedbot = WeedBot()

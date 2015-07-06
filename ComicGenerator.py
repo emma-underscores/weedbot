@@ -9,9 +9,10 @@ panel_width = 450
 
 class ComicGenerator:
     def __init__(self):
-        self.char_paths = map(lambda p: os.path.join("chars", p), os.listdir("chars/"))
+        self.char_paths = list(map(lambda p: os.path.join("chars", p), os.listdir("chars/")))
         self.bg_paths = list(map(lambda p: os.path.join("backgrounds", p), os.listdir("backgrounds/")))
-        self.font_file = "fonts/font.ttf"
+        self.font_file = "fonts/Calibri.ttf"
+
         self.font_size = 12
 
     def _gen_panel_text(self, msgs):
@@ -19,10 +20,10 @@ class ComicGenerator:
         panel = []
         for msg in msgs:
             # if we already have a full panel (two speakers, or consecutive msg speaker), create a new panel
-            if len(panel) >= 2 or (len(panel) == 1 and panel[0][5] == msg[5]):
+            if len(panel) >= 2 or (len(panel) == 1 and panel[0][0] == msg["sender"]):
                 panels.append(panel)
                 panel = []
-            panel.append((msg[4], msg[5]))
+            panel.append((msg["sender"], msg["content"]))
         panels.append(panel)
         return panels
 
@@ -106,21 +107,23 @@ class ComicGenerator:
                 (st2, (st2w, st2h)) = self._wrap(panels[i][1][1], font, drawn, 2*panel_width/3.0)
                 self._render_text(st2, font, drawn, (panel_width-10-st2w, st1h + 10))
 
-            texth = st1h + 10
+            text_height = st1h + 10
             if st2h > 0:
-                texth += st2h + 10 + 5
+                text_height += st2h + 10 + 5
 
-            maxch = panel_height - texth
-            im1 = self._fit_img(char_map[panel[0][0]], 2*panel_width/5.0-10, maxch)
+            max_ch_height = panel_height - text_height
+            im1 = self._fit_img(char_map[panel[0][0]], 2*panel_width/5.0-10, max_ch_height)
             panel_img.paste(im1, (10, panel_height-im1.size[1]), im1)
 
             if len(panel) == 2:
-                im2 = self._fit_img(char_map[panel[1][0]], 2*panel_width/5.0-10, maxch)
+                im2 = self._fit_img(char_map[panel[1][0]], 2*panel_width/5.0-10, max_ch_height)
                 im2 = im2.transpose(Image.FLIP_LEFT_RIGHT)
                 panel_img.paste(im2, (panel_width-im2.size[0]-10, panel_height-im2.size[1]), im2)
 
             drawn.line([(0, 0), (0, panel_height-1), (panel_width-1, panel_height-1), (panel_width-1, 0), (0, 0)], (0, 0, 0, 0xff))
             del drawn
             img.paste(panel_img, (0, panel_height * i))
+
+        img.save("comic.jpg", quality=85)
 
         return img
