@@ -11,8 +11,8 @@ class ComicGenerator:
     def __init__(self):
         self.char_paths = list(map(lambda p: os.path.join("chars", p), os.listdir("chars/")))
         self.bg_paths = list(map(lambda p: os.path.join("backgrounds", p), os.listdir("backgrounds/")))
-        self.font_file = "fonts/Comic.ttf"
-
+        # TODO: put these in config file
+        self.font_file = "fonts/ComicBD.ttf"
         self.font_size = 16
 
     def _gen_panel_text(self, msgs):
@@ -85,7 +85,7 @@ class ComicGenerator:
         panels = self._gen_panel_text(msgs)
 
         characters = set(msg[4] for msg in msgs)
-        char_map = {ch: Image.open(path) for (ch, path) in zip(characters, self.char_paths)}
+        char_map = {ch: path for (ch, path) in zip(characters, self.char_paths)}
 
         # DEBUG
         print(char_map)
@@ -114,14 +114,14 @@ class ComicGenerator:
                 text_height += st2h + 10 + 5
 
             max_ch_height = panel_height - text_height
-            im1 = self._fit_img(char_map[panel[0][0]], 2*panel_width/5.0-10, max_ch_height)
+            im1 = self._fit_img(Image.open(char_map[panel[0][0]]), 2*panel_width/5.0-10, max_ch_height)
 
             # DEBUG
             print(char_map[panel[0][0]])
             panel_img.paste(im1, (10, panel_height-im1.size[1]), im1)
 
             if len(panel) == 2:
-                im2 = self._fit_img(char_map[panel[1][0]], 2*panel_width/5.0-10, max_ch_height)
+                im2 = self._fit_img(Image.open(char_map[panel[1][0]]), 2*panel_width/5.0-10, max_ch_height)
                 im2 = im2.transpose(Image.FLIP_LEFT_RIGHT)
                 panel_img.paste(im2, (panel_width-im2.size[0]-10, panel_height-im2.size[1]), im2)
 
