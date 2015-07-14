@@ -87,6 +87,9 @@ class ComicGenerator:
         characters = set(msg[4] for msg in msgs)
         char_map = {ch: Image.open(path) for (ch, path) in zip(characters, self.char_paths)}
 
+        # DEBUG
+        print(char_map)
+
         img_width = panel_width
         img_height = panel_height * len(panels)
         img = Image.new("RGBA", (img_width, img_height), (0xff, 0xff, 0xff, 0xff))
@@ -112,6 +115,9 @@ class ComicGenerator:
 
             max_ch_height = panel_height - text_height
             im1 = self._fit_img(char_map[panel[0][0]], 2*panel_width/5.0-10, max_ch_height)
+
+            # DEBUG
+            print(char_map[panel[0][0]])
             panel_img.paste(im1, (10, panel_height-im1.size[1]), im1)
 
             if len(panel) == 2:
