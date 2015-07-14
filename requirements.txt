@@ -1,4 +1,4 @@
 websocket-client
 Pillow
 requests
-yaml
+pyyaml
