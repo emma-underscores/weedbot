@@ -9,7 +9,9 @@ import time
 
 from websocket import create_connection, WebSocketConnectionClosedException
 import requests
+import requests.exceptions
 import yaml
+
 import ComicGenerator
 
 
@@ -64,7 +66,8 @@ class WeedBot:
             log_path = self.cfg["log_path"]
         except KeyError:
             log_path = self.room + ".log"
-        # logging.basicConfig(filename=log_path, level=log_level)
+            
+        logging.basicConfig(filename=log_path, level=log_level)
 
         self._connect()
         self.msg_id = 0
@@ -117,9 +120,10 @@ class WeedBot:
                             )
         except sqlite3.Error as e:
             # TODO: reconnect
-            logging.critical("Could not initialize database: %s", e)
+            logging.critical("Could not initialize message table: %s", e)
             # FIXME: Correct way to re-raise exception?
             raise e
+
 
     def _connect(self):
         self.conn = create_connection("wss://euphoria.io/room/{}/ws".format(self.cfg["room"]))
@@ -218,11 +222,11 @@ class WeedBot:
 
         # if message not found, send an error
         if last_msg is None:
-            self._send_message("Error: message not found in database.", last_message_id)
+            self._send_message("Error: message not found in database. If this is unexpected, please contact @skow.", last_message_id)
             return
 
         # parent of comic conversation
-        root_msg = self.db.execute("SELECT content, time, id, parent, sender FROM message WHERE id = ?", (last_msg["parent"],)).fetchone()
+        root_msg = self.db.execute("SELECT content, time, id, parent, sender FROM message WHERE id = ?;", (last_msg["parent"],)).fetchone()
         if root_msg is not None:
             root_msg_id = root_msg["id"]
         else:
@@ -261,7 +265,12 @@ class WeedBot:
         img.save(mem_img, format="JPEG", quality=85)
         base64img = base64.b64encode(mem_img.getvalue())
         url = "https://api.imgur.com/3/upload.json"
-        r = requests.post(url, data={'key': self.key, 'image': base64img, 'title': 'Weedbot Comic'}, headers=headers, verify=False)
+        for i in range(5):
+            try:
+                r = requests.post(url, data={'key': self.key, 'image': base64img, 'title': 'Weedbot Comic'}, headers=headers, verify=False)
+                break
+            except requests.exceptions.ConnectionError:
+                time.sleep(i * 3)
         val = json.loads(r.text)
         try:
             return val['data']['link']
