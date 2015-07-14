@@ -11,9 +11,9 @@ class ComicGenerator:
     def __init__(self):
         self.char_paths = list(map(lambda p: os.path.join("chars", p), os.listdir("chars/")))
         self.bg_paths = list(map(lambda p: os.path.join("backgrounds", p), os.listdir("backgrounds/")))
-        self.font_file = "fonts/Calibri.ttf"
+        self.font_file = "fonts/Comic.ttf"
 
-        self.font_size = 12
+        self.font_size = 16
 
     def _gen_panel_text(self, msgs):
         panels = []
@@ -84,7 +84,6 @@ class ComicGenerator:
         # panels is now a list of nick, msg
         panels = self._gen_panel_text(msgs)
 
-
         characters = set(msg[4] for msg in msgs)
         char_map = {ch: Image.open(path) for (ch, path) in zip(characters, self.char_paths)}
 
@@ -123,7 +122,5 @@ class ComicGenerator:
             drawn.line([(0, 0), (0, panel_height-1), (panel_width-1, panel_height-1), (panel_width-1, 0), (0, 0)], (0, 0, 0, 0xff))
             del drawn
             img.paste(panel_img, (0, panel_height * i))
-
-        img.save("comic.jpg", quality=85)
 
         return img

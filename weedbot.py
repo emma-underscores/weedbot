@@ -1,13 +1,15 @@
-import yaml
+import base64
 import json
-import time
-import sqlite3
 import logging
+import io
 import os
 import os.path
+import sqlite3
+import time
 
 from websocket import create_connection, WebSocketConnectionClosedException
-
+import requests
+import yaml
 import ComicGenerator
 
 
@@ -54,10 +56,15 @@ class WeedBot:
         self.room = room
 
         try:
+            self.key = self.cfg["api_key"]
+        except KeyError:
+            raise InvalidConfigError("Missing imgur API key.")
+
+        try:
             log_path = self.cfg["log_path"]
         except KeyError:
             log_path = self.room + ".log"
-        logging.basicConfig(filename=log_path, level=log_level)
+        # logging.basicConfig(filename=log_path, level=log_level)
 
         self._connect()
         self.msg_id = 0
@@ -78,6 +85,11 @@ class WeedBot:
             self.nick = self.cfg["nick"]
         except KeyError:
             self.nick = "WeedBot"
+
+        try:
+            self.password = self.cfg["password"]
+        except KeyError:
+            self.password = None
 
         self.db = sqlite3.connect(db_path)
         self.db.row_factory = sqlite3.Row
@@ -130,7 +142,7 @@ class WeedBot:
         packet = {"type": "auth",
                   "data": {"type": "passcode",
                            "passcode": self.cfg["password"]},
-                  "id": str(self.data["msg_id"])}
+                  "id": str(self.msg_id)}
         return self._send_packet(packet)
 
     def _handle_ping_event(self, packet):
@@ -167,10 +179,14 @@ class WeedBot:
     def _log_send_event(self, packet):
         logging.debug("Logging send-event.")
         try:
+            parent = packet["data"]["parent"]
+        except KeyError:
+            parent = ""
+        try:
             self.db.execute("INSERT INTO message VALUES (?, ?, ?, ?, ?, ?)",
                             (self.room,
                             packet["data"]["id"],
-                            packet["data"]["parent"],
+                            parent,
                             packet["data"]["time"],
                             packet["data"]["sender"]["name"],
                             packet["data"]["content"]))
@@ -191,23 +207,42 @@ class WeedBot:
     def _handle_comic(self, packet):
         logging.debug("Processing !comic command.")
         newest = packet["data"]["time"]
-        print(type(newest))
-        last_message_id = packet["data"]["parent"]
+        # parent of !comic command's ID
+        try:
+            last_message_id = packet["data"]["parent"]
+        except KeyError:
+            self._send_message("Usage: reply on a new level to the last message you want included in the comic.", packet["data"]["id"])
+            return
+        # parent of !comic command
         last_msg = self.db.execute("SELECT content, time, id, parent, sender FROM message WHERE id = ?", (last_message_id,)).fetchone()
+
+        # if message not found, send an error
+        if last_msg is None:
+            self._send_message("Error: message not found in database.", last_message_id)
+            return
+
+        # parent of comic conversation
         root_msg = self.db.execute("SELECT content, time, id, parent, sender FROM message WHERE id = ?", (last_msg["parent"],)).fetchone()
-        print(root_msg)
+        if root_msg is not None:
+            root_msg_id = root_msg["id"]
+        else:
+            root_msg_id = ""
+
         limit = self.cfg["msg_limit"]
+
         candidates = self.db.execute("SELECT content, time, id, parent, sender FROM message WHERE parent = ? AND time <= ? ORDER BY time ASC;",
-                                     (root_msg["id"],
+                                     (root_msg_id,
                                       newest)).fetchall()
-        if len(candidates) < limit:
+        if len(candidates) < limit and root_msg is not None:
             # not enough messages, get the parent
             candidates = [root_msg] + candidates
         # TODO filter messages by time
 
 
-        self.gen.make_comic(candidates)
-        # self._send_message(str(candidates), last_message_id)
+        img = self.gen.make_comic(candidates)
+        ret = self._upload_to_imgur(img)
+
+        self._send_message(ret, last_message_id)
 
 
     def _dispatch(self, packet):
@@ -219,8 +254,24 @@ class WeedBot:
             self._handle_send_event(packet)
 
 
+    def _upload_to_imgur(self, img):
+        logging.debug("Uploading image to imgur.")
+        headers = {'Authorization': 'Client-ID ' + self.key}
+        mem_img = io.BytesIO()
+        img.save(mem_img, format="JPEG", quality=85)
+        base64img = base64.b64encode(mem_img.getvalue())
+        url = "https://api.imgur.com/3/upload.json"
+        r = requests.post(url, data={'key': self.key, 'image': base64img, 'title': 'Weedbot Comic'}, headers=headers, verify=False)
+        val = json.loads(r.text)
+        try:
+            return val['data']['link']
+        except KeyError:
+            return val['data']['error']
+
     def run(self):
         logging.debug("Starting.")
+        if self.password is not None:
+            self._auth()
         self._set_nick()
 
         while(True):
@@ -230,6 +281,9 @@ class WeedBot:
             except WebSocketConnectionClosedException:
                 time.sleep(3)
                 self._connect()
+                if self.password is not None:
+                    self._auth()
+                self._set_nick()
             else:
                 self._dispatch(packet)
 
