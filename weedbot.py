@@ -7,7 +7,7 @@ import os.path
 import sqlite3
 import time
 
-from websocket import create_connection, WebSocketConnectionClosedException
+from websocket import create_connection, WebSocketConnectionClosedException, WebSocketException
 import requests
 import requests.exceptions
 import yaml
@@ -66,7 +66,7 @@ class WeedBot:
             log_path = self.cfg["log_path"]
         except KeyError:
             log_path = self.room + ".log"
-            
+
         logging.basicConfig(filename=log_path, level=log_level)
 
         self._connect()
@@ -289,7 +289,10 @@ class WeedBot:
                 packet = json.loads(rawdata)
             except WebSocketConnectionClosedException:
                 time.sleep(3)
-                self._connect()
+                try:
+                    self._connect()
+                except WebSocketException as e:
+                    logging.warning(e)
                 if self.password is not None:
                     self._auth()
                 self._set_nick()
