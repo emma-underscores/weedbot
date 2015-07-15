@@ -81,10 +81,27 @@ class ComicGenerator:
         random.shuffle(self.char_paths)
         random.shuffle(self.bg_paths)
 
+        trimmed = []
+        characters = set()
+        for i in range(len(msgs)-1, -1, -1):
+            trimmed.append(msgs[i])
+            characters.add(msgs[i]["sender"])
+            if msgs[i]["time"] - msgs[i-1]["time"] > 120:
+                print("time triggered")
+                break
+            if len(characters) > 3:
+                print("characters triggered")
+                break
+            if len(trimmed) > 10:
+                print("trimmed triggered")
+                break
+        trimmed.reverse()
+        print(msgs)
+        print(trimmed)
         # panels is now a list of nick, msg
-        panels = self._gen_panel_text(msgs)
+        panels = self._gen_panel_text(trimmed)
 
-        characters = set(msg[4] for msg in msgs)
+        # characters = set(msg[4] for msg in msgs)
         char_map = {ch: path for (ch, path) in zip(characters, self.char_paths)}
 
         # DEBUG

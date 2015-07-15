@@ -1,6 +1,0 @@
-log_level: warning
-log_path: weedbot.log
-room: test
-db_path: weedbot.db
-expire_hours: 24
-msg_limit: 5
