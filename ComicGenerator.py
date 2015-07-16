@@ -87,25 +87,17 @@ class ComicGenerator:
             trimmed.append(msgs[i])
             characters.add(msgs[i]["sender"])
             if msgs[i]["time"] - msgs[i-1]["time"] > 120:
-                print("time triggered")
                 break
             if len(characters) > 3:
-                print("characters triggered")
                 break
             if len(trimmed) > 10:
-                print("trimmed triggered")
                 break
         trimmed.reverse()
-        print(msgs)
-        print(trimmed)
+
         # panels is now a list of nick, msg
         panels = self._gen_panel_text(trimmed)
 
-        # characters = set(msg[4] for msg in msgs)
         char_map = {ch: path for (ch, path) in zip(characters, self.char_paths)}
-
-        # DEBUG
-        print(char_map)
 
         img_width = panel_width
         img_height = panel_height * len(panels)
@@ -133,8 +125,6 @@ class ComicGenerator:
             max_ch_height = panel_height - text_height
             im1 = self._fit_img(Image.open(char_map[panel[0][0]]), 2*panel_width/5.0-10, max_ch_height)
 
-            # DEBUG
-            print(char_map[panel[0][0]])
             panel_img.paste(im1, (10, panel_height-im1.size[1]), im1)
 
             if len(panel) == 2:

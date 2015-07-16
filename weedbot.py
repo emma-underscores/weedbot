@@ -210,7 +210,7 @@ class WeedBot:
     # TODO: convert to using bare cursor
     def _handle_comic(self, packet):
         logging.debug("Processing !comic command.")
-        newest = packet["data"]["time"]
+        # newest = packet["data"]["time"]
         # parent of !comic command's ID
         try:
             last_message_id = packet["data"]["parent"]
@@ -224,6 +224,8 @@ class WeedBot:
         if last_msg is None:
             self._send_message("Error: message not found in database. If this is unexpected, please contact @skow.", last_message_id)
             return
+
+        newest = last_msg["time"]
 
         # parent of comic conversation
         root_msg = self.db.execute("SELECT content, time, id, parent, sender FROM message WHERE id = ?;", (last_msg["parent"],)).fetchone()
