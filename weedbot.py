@@ -136,9 +136,12 @@ class WeedBot:
             return ret
         # TODO: handle reconnect delays better
         except WebSocketConnectionClosedException:
-            time.sleep(3)
+            time.sleep(5)
             logging.warning("Connection closed. Attempting reconnect.")
-            self._connect()
+            try:
+                self._connect()
+            except WebSocketConnectionClosedException:
+                pass
             return self._send_packet(packet)
 
     def _auth(self):
