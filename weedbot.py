@@ -225,7 +225,7 @@ class WeedBot:
 
         # if message not found, send an error
         if last_msg is None:
-            self._send_message("Error: message not found in database. If this is unexpected, please contact @skow.", last_message_id)
+            self._send_message("Error: message not found in database. If this is unexpected, please contact @greenie.", last_message_id)
             return
 
         newest = last_msg["time"]
