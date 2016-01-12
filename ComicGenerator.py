@@ -86,8 +86,8 @@ class ComicGenerator:
         for i in range(len(msgs)-1, -1, -1):
             trimmed.append(msgs[i])
             characters.add(msgs[i]["sender"])
-            if msgs[i]["time"] - msgs[i-1]["time"] > 120:
-                break
+           # if msgs[i]["time"] - msgs[i-1]["time"] > 120:
+           #     break
             if len(characters) > 3:
                 break
             if len(trimmed) > 10:
