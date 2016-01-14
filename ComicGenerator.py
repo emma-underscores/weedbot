@@ -12,7 +12,7 @@ class ComicGenerator:
         self.char_paths = list(map(lambda p: os.path.join("chars", p), os.listdir("chars/")))
         self.bg_paths = list(map(lambda p: os.path.join("backgrounds", p), os.listdir("backgrounds/")))
         # TODO: put these in config file
-        self.font_file = "fonts/ComicBD.ttf"
+        self.font_file = "fonts/Comic.ttf"
         self.font_size = 16
 
     def _gen_panel_text(self, msgs):
