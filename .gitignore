@@ -58,3 +58,9 @@ target/
 
 # PyCharm
 .idea/
+
+# OSX
+.DS_Store
+
+# Config File
+default.yaml
