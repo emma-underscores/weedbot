@@ -6,6 +6,8 @@ import ComicGenerator
 
 import discord
 from discord.ext import commands
+
+
 description = '''An bot for making shitty comics.'''
 
 weedbot = commands.Bot(command_prefix='?', description=description)
@@ -18,11 +20,6 @@ async def on_ready():
     print(weedbot.user.id)
     print('------')
 
-if __name__ == "__main__":
-
-    token = os.environ['WEEDBOT_TOKEN']
-
-    weedbot.run(token)
 @weedbot.command(pass_context=True)
 async def comic(ctx):
     """Create an comic from the last x messages and post it.
@@ -36,3 +33,10 @@ async def comic(ctx):
         lastxmessages = self.logs_from(channel, numberofmessages)
         img = self.gen.make_comic(lastxmessages)
         weedbot.send_file(channel, img)
+
+
+if __name__ == "__main__":
+
+    token = os.environ['WEEDBOT_TOKEN']
+
+    weedbot.run(token)
