@@ -20,10 +20,10 @@ class ComicGenerator:
         panel = []
         for msg in msgs:
             # if we already have a full panel (two speakers, or consecutive msg speaker), create a new panel
-            if len(panel) >= 2 or (len(panel) == 1 and panel[0][0] == msg["sender"]):
+            if len(panel) >= 2 or (len(panel) == 1 and panel[0][0] == msg.author):
                 panels.append(panel)
                 panel = []
-            panel.append((msg["sender"], msg["content"]))
+            panel.append((msg.author, msg.content))
         panels.append(panel)
         return panels
 
@@ -85,7 +85,7 @@ class ComicGenerator:
         characters = set()
         for i in range(len(msgs)-1, -1, -1):
             trimmed.append(msgs[i])
-            characters.add(msgs[i]["sender"])
+            characters.add(msgs[i].author)
            # if msgs[i]["time"] - msgs[i-1]["time"] > 120:
            #     break
             if len(characters) > 3:
