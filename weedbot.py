@@ -1,6 +1,5 @@
 import os
 import os.path
-import os.environ
 
 import ComicGenerator
 
