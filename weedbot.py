@@ -10,7 +10,7 @@ import time
 from websocket import create_connection, WebSocketConnectionClosedException, WebSocketException
 import requests
 import requests.exceptions
-import yaml
+import os.environ
 
 import ComicGenerator
 
@@ -283,12 +283,22 @@ class WeedBot:
             return val['data']['link']
         except KeyError:
             return val['data']['error']
+description = '''An bot for making shitty comics.'''
 
     def run(self):
         logging.debug("Starting.")
         if self.password is not None:
             self._auth()
         self._set_nick()
+weedbot = commands.Bot(command_prefix='?', description=description)
+weedbot.gen = ComicGenerator.ComicGenerator()
+    
+@weedbot.event
+async def on_ready():
+    print('Logged in as')
+    print(weedbot.user.name)
+    print(weedbot.user.id)
+    print('------')
 
         while(True):
             try:
@@ -307,8 +317,8 @@ class WeedBot:
                 self._dispatch(packet)
 
 
-
-
 if __name__ == "__main__":
-    weedbot = WeedBot()
-    weedbot.run()
+
+    token = os.environ['WEEDBOT_TOKEN']
+
+    weedbot.run(token)
