@@ -14,6 +14,8 @@ import yaml
 
 import ComicGenerator
 
+import discord
+from discord.ext import commands
 
 MAX_ERRORS = 5
 

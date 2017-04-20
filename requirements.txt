@@ -1,4 +1,6 @@
 websocket-client
+async-timeout
+discord.py
 Pillow
 requests
 pyyaml
