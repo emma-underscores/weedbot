@@ -23,7 +23,7 @@ class ComicGenerator:
             if len(panel) >= 2 or (len(panel) == 1 and panel[0][0] == msg.author):
                 panels.append(panel)
                 panel = []
-            panel.append((msg.author, msg.content))
+            panel.append((msg.author, msg.clean_content))
         panels.append(panel)
         return panels
 
