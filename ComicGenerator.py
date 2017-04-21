@@ -2,6 +2,7 @@ import os
 import os.path
 import random
 import re
+import unicodedata
 
 from PIL import Image, ImageFont, ImageDraw
 
@@ -25,7 +26,10 @@ class ComicGenerator:
                 panels.append(panel)
                 panel = []
             panel.append((msg.author,
-                re.sub(r'<:([a-zA-Z_0-9]*):([0-9]*)>', r":\1:", msg.clean_content)))
+                # tidy up custom emotes and replace unicode emotes with names
+                re.sub('[\U0001F52F-\U0001F991]',
+                       lambda y: ":" + unicodedata.name(y.group(0)) + ":",
+                re.sub(r'<:([a-zA-Z_0-9]*):([0-9]*)>', r":\1:", msg.clean_content))))
         panels.append(panel)
         return panels
 
