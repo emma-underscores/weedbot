@@ -1,5 +1,6 @@
 import os
 import os.path
+import io
 
 import ComicGenerator
 
@@ -38,4 +39,11 @@ if __name__ == "__main__":
             messages=[]
             async for message in weedbot.logs_from(channel, numberofmessages, before=ctx.message):
                 messages.append(message)
+            img = weedbot.gen.make_comic(messages)
+            img_io = io.BytesIO()
+            img.save(img_io, 'JPEG', quality=90)
+            img_io.seek(0)
+            await weedbot.send_file(channel, img_io, filename='weedbot.jpg')
+            img_io.close()
+
     weedbot.run(token)
