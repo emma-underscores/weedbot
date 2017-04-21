@@ -14,20 +14,6 @@ class ComicBot(commands.Bot):
         self.gen = ComicGenerator.ComicGenerator()
     
 
-@weedbot.command(pass_context=True)
-async def comic(ctx, numberofmessages : int):
-    """Create an comic from the last x messages and post it.
-    """
-    maxmessages = 10
-    if 0 > numberofmessages > maxmessages:
-        weedbot.say("Must be from 1 to " + maxmessages + " messages")
-    else:
-        channel = ctx.message.channel
-        lastxmessages = weedbot.logs_from(channel, numberofmessages, before=ctx.message)
-        img = weedbot.gen.make_comic(lastxmessages)
-        weedbot.send_file(channel, img)
-
-
 if __name__ == "__main__":
 
     token = os.environ['WEEDBOT_TOKEN']
@@ -40,4 +26,13 @@ if __name__ == "__main__":
         print(weedbot.user.id)
         print('------')
 
+    @weedbot.command(pass_context=True)
+    async def comic(ctx, numberofmessages : int):
+        """Create an comic from the last x messages and post it.
+        """
+        maxmessages = 10
+        if 0 > numberofmessages > maxmessages:
+            await weedbot.say("Must be from 1 to " + maxmessages + " messages")
+        else:
+            channel = ctx.message.channel
     weedbot.run(token)
