@@ -28,8 +28,8 @@ async def comic(ctx, numberofmessages : int):
         weedbot.say("Must be from 1 to " + maxmessages + " messages")
     else:
         channel = ctx.message.channel
-        lastxmessages = self.logs_from(channel, numberofmessages)
-        img = self.gen.make_comic(lastxmessages)
+        lastxmessages = weedbot.logs_from(channel, numberofmessages, before=ctx.message)
+        img = weedbot.gen.make_comic(lastxmessages)
         weedbot.send_file(channel, img)
 
 
