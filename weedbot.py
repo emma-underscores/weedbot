@@ -13,12 +13,6 @@ class ComicBot(commands.Bot):
         commands.Bot.__init__(self, command_prefix='?', description=description)
         self.gen = ComicGenerator.ComicGenerator()
     
-@weedbot.event
-async def on_ready():
-    print('Logged in as')
-    print(weedbot.user.name)
-    print(weedbot.user.id)
-    print('------')
 
 @weedbot.command(pass_context=True)
 async def comic(ctx, numberofmessages : int):
@@ -38,5 +32,12 @@ if __name__ == "__main__":
 
     token = os.environ['WEEDBOT_TOKEN']
     weedbot = ComicBot()
+
+    @weedbot.event
+    async def on_ready():
+        print('Logged in as')
+        print(weedbot.user.name)
+        print(weedbot.user.id)
+        print('------')
 
     weedbot.run(token)
