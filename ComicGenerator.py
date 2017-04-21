@@ -1,6 +1,7 @@
 import os
 import os.path
 import random
+import re
 
 from PIL import Image, ImageFont, ImageDraw
 
@@ -23,7 +24,8 @@ class ComicGenerator:
             if len(panel) >= 2 or (len(panel) == 1 and panel[0][0] == msg.author):
                 panels.append(panel)
                 panel = []
-            panel.append((msg.author, msg.clean_content))
+            panel.append((msg.author,
+                re.sub(r'<:([a-zA-Z_0-9]*):([0-9]*)>', r":\1:", msg.clean_content)))
         panels.append(panel)
         return panels
 
