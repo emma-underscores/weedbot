@@ -20,12 +20,11 @@ async def on_ready():
     print('------')
 
 @weedbot.command(pass_context=True)
-async def comic(ctx):
+async def comic(ctx, numberofmessages : int):
     """Create an comic from the last x messages and post it.
     """
-    numberofmessages = int(ctx.args[0])
     maxmessages = 10
-    if numberofmessages > maxmessages:
+    if 0 > numberofmessages > maxmessages:
         weedbot.say("Must be from 1 to " + maxmessages + " messages")
     else:
         channel = ctx.message.channel
