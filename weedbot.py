@@ -7,10 +7,11 @@ import discord
 from discord.ext import commands
 
 
-description = '''An bot for making shitty comics.'''
-
-weedbot = commands.Bot(command_prefix='?', description=description)
-weedbot.gen = ComicGenerator.ComicGenerator()
+class ComicBot(commands.Bot):
+    def __init__(self, command_prefix='?'):
+        description = '''An bot for making shitty comics.'''
+        commands.Bot.__init__(self, command_prefix='?', description=description)
+        self.gen = ComicGenerator.ComicGenerator()
     
 @weedbot.event
 async def on_ready():
@@ -36,5 +37,6 @@ async def comic(ctx, numberofmessages : int):
 if __name__ == "__main__":
 
     token = os.environ['WEEDBOT_TOKEN']
+    weedbot = ComicBot()
 
     weedbot.run(token)
