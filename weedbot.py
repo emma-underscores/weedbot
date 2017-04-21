@@ -35,4 +35,7 @@ if __name__ == "__main__":
             await weedbot.say("Must be from 1 to " + maxmessages + " messages")
         else:
             channel = ctx.message.channel
+            messages=[]
+            async for message in weedbot.logs_from(channel, numberofmessages, before=ctx.message):
+                messages.append(message)
     weedbot.run(token)
