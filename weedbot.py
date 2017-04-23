@@ -45,7 +45,7 @@ if __name__ == "__main__":
         except ValueError:
             await weedbot.say("Must be a number from 1 to {}.".format(maxmessages))
         else:
-            if 0 < numberofmessages < maxmessages:
+            if 0 < numberofmessages <= maxmessages:
                 messages=[]
                 async for message in weedbot.logs_from(channel, numberofmessages, before=ctx.message):
                     messages.append(message)
