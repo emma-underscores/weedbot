@@ -53,7 +53,7 @@ if __name__ == "__main__":
                 img_io = io.BytesIO()
                 img.save(img_io, 'JPEG', quality=90)
                 img_io.seek(0)
-                await self.send_file(channel, img_io, filename='weedbot.jpg')
+                await weedbot.send_file(channel, img_io, filename='weedbot.jpg')
                 img_io.close()
             else:
                 await weedbot.say("Must be from 1 to {}.".format(maxmessages))
