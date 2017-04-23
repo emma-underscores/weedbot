@@ -22,12 +22,6 @@ class ComicBot(commands.Bot):
         description = '''An bot for making shitty comics.'''
         commands.Bot.__init__(self, command_prefix='?', description=description)
         self.gen = ComicGenerator.ComicGenerator()
-    def post_image(self, channel, img)
-        img_io = io.BytesIO()
-        img.save(img_io, 'JPEG', quality=90)
-        img_io.seek(0)
-        await weedbot.send_file(channel, img_io, filename='weedbot.jpg')
-        img_io.close()
 
 if __name__ == "__main__":
 
@@ -56,7 +50,11 @@ if __name__ == "__main__":
                 async for message in weedbot.logs_from(channel, numberofmessages, before=ctx.message):
                     messages.append(message)
                 img = weedbot.gen.make_comic(messages)
-                weedbot.sendimage(channel, img)
+                img_io = io.BytesIO()
+                img.save(img_io, 'JPEG', quality=90)
+                img_io.seek(0)
+                await self.send_file(channel, img_io, filename='weedbot.jpg')
+                img_io.close()
             else:
                 await weedbot.say("Must be from 1 to {}.".format(maxmessages))
 
