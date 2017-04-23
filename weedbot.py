@@ -14,12 +14,20 @@ handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w'
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 
+maxmessages = 10
+
+
 class ComicBot(commands.Bot):
     def __init__(self, command_prefix='?'):
         description = '''An bot for making shitty comics.'''
         commands.Bot.__init__(self, command_prefix='?', description=description)
         self.gen = ComicGenerator.ComicGenerator()
-    
+    def post_image(self, channel, img)
+        img_io = io.BytesIO()
+        img.save(img_io, 'JPEG', quality=90)
+        img_io.seek(0)
+        await weedbot.send_file(channel, img_io, filename='weedbot.jpg')
+        img_io.close()
 
 if __name__ == "__main__":
 
@@ -34,22 +42,23 @@ if __name__ == "__main__":
         print('------')
 
     @weedbot.command(pass_context=True)
-    async def comic(ctx, numberofmessages : int):
+    async def comic(ctx, numberofmessages):
         """Create an comic from the last x messages and post it.
         """
-        maxmessages = 10
-        if 0 > numberofmessages > maxmessages:
-            await weedbot.say("Must be from 1 to " + maxmessages + " messages")
+        channel = ctx.message.channel
+        try:
+            numberofmessages = int(numberofmessages)
+        except ValueError:
+            await weedbot.say("Must be a number from 1 to {}.".format(maxmessages))
         else:
-            channel = ctx.message.channel
-            messages=[]
-            async for message in weedbot.logs_from(channel, numberofmessages, before=ctx.message):
-                messages.append(message)
-            img = weedbot.gen.make_comic(messages)
-            img_io = io.BytesIO()
-            img.save(img_io, 'JPEG', quality=90)
-            img_io.seek(0)
-            await weedbot.send_file(channel, img_io, filename='weedbot.jpg')
-            img_io.close()
+            if 0 < numberofmessages < maxmessages:
+                messages=[]
+                async for message in weedbot.logs_from(channel, numberofmessages, before=ctx.message):
+                    messages.append(message)
+                img = weedbot.gen.make_comic(messages)
+                weedbot.sendimage(channel, img)
+            else:
+                await weedbot.say("Must be from 1 to {}.".format(maxmessages))
+
 
     weedbot.run(token)
