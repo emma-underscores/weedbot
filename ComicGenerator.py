@@ -27,6 +27,8 @@ class ComicGenerator:
                 panel = []
             panel.append((msg.author,
                 # tidy up custom emotes and replace unicode emotes with names
+                # todo: skintone stuff
+                #([/U0001F3FB-/U0001F3FF][\u261D\u2639\u263A\u26F9\u270A-\u270D\U0001F385\U0001F3C2-\U0001FC4\U0001FC7\U0001F3CA-\U0001F3CC\U0001F442\U0001F443\U0001F446-\U0001F450\U0001F466-\U0001F478\U0001F47C\U0001F481-\U0001F483\U0001F486\U0001F487\U0001F48F\U0001F491\U0001F4AA\U0001F590-\U0001F596\U0001F600-\U0001F637\U0001F641-\U0001F647\U0001F64B-\U0001F64F\U0001F6A3\U0001F6B4-\U0001F6B6\U0001F6C0\U0001F910-\U0001F915\U0001F917\U0001F918])|
                 re.sub(r'([\U0001F1E6-\U0001F1FF\U0001F1E6-\U0001F1FF])|([\U0001F000-\U0001F991])|([\u26BD\uFE0F\uE57A\u231A-\u231B\u2600-\u2747\u2764\u2690\u200D])',
                        lambda y: ":" + unicodedata.name(y.group(0)).replace(" ","").lower() + ":",
                 re.sub(r'<:([a-zA-Z_0-9]*):([0-9]*)>', r":\1:", msg.clean_content))))
