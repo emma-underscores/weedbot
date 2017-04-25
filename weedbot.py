@@ -21,6 +21,8 @@ class Weedbot:
         self.bot = bot
         self.gen = ComicGenerator.ComicGenerator()
         self.maxmessages = maxmessages
+        self.autotime = 120 # 2 minutes
+        self.autochars = 3 # 3 people
 
     async def send_image(self, channel, img):
         img_io = io.BytesIO()
@@ -29,13 +31,39 @@ class Weedbot:
         await self.bot.send_file(channel, img_io, filename='weedbot.jpg')
         logger.info("sent image")
         img_io.close()
+
+    def auto_filter_messages(self, messages):
+        logger.info("filtering messages")
+        automessages = messages[:1]
+        chars = {messages[0].author.id}
+        for message, nextmessage in zip(messages, messages[1:]):
+            logger.info("{0} - {1} = {2}".format(message.timestamp, nextmessage.timestamp, (message.timestamp - nextmessage.timestamp).total_seconds()))
+            chars.add(nextmessage.author.id)
+            if len(chars) > self.autochars:
+                logger.info("Too many characters")
+                break
+            if (message.timestamp - nextmessage.timestamp).total_seconds() < self.autotime:
+                automessages.append(nextmessage)
+            else:
+                logger.info("Timestamp diff of {}".format((message.timestamp - nextmessage.timestamp).total_seconds()))
+                break
+        return automessages
+
    
-    async def comic(self, ctx, numberofmessages):
     @commands.command(pass_context=True, no_pm=True, aliases=['Comic','weed','weedbot'])
+    async def comic(self, ctx, numberofmessages=None):
         """Create an comic from the last x messages and post it.
         """
-        logger.info('Running comic command')
         channel = ctx.message.channel
+        if numberofmessages is None:
+            logger.info('Running comic command on auto')
+            unfilteredmessages=[]
+            async for message in self.bot.logs_from(channel, self.maxmessages, before=ctx.message):
+                unfilteredmessages.append(message)
+            messages = self.auto_filter_messages(unfilteredmessages)
+            img = self.gen.make_comic(messages)
+            await self.send_image(channel, img)
+            return
         try:
             numberofmessages = int(numberofmessages)
         except ValueError:
@@ -50,7 +78,6 @@ class Weedbot:
                 await self.send_image(channel, img)
             else:
                 await self.bot.say("Must be from 1 to {}.".format(maxmessages))
-
 
 if __name__ == "__main__":
 
