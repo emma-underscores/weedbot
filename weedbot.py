@@ -29,8 +29,8 @@ class Weedbot:
         await self.bot.send_file(channel, img_io, filename='weedbot.jpg')
         img_io.close()
    
-    @commands.command(pass_context=True, no_pm=True)
     async def comic(self, ctx, numberofmessages):
+    @commands.command(pass_context=True, no_pm=True, aliases=['Comic','weed','weedbot'])
         """Create an comic from the last x messages and post it.
         """
         logger.info('Running comic command')
