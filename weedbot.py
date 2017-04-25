@@ -27,6 +27,7 @@ class Weedbot:
         img.save(img_io, 'JPEG', quality=90)
         img_io.seek(0)
         await self.bot.send_file(channel, img_io, filename='weedbot.jpg')
+        logger.info("sent image")
         img_io.close()
    
     async def comic(self, ctx, numberofmessages):
@@ -41,6 +42,7 @@ class Weedbot:
             await self.bot.say("Must be a number from 1 to {}.".format(self.maxmessages))
         else:
             if 0 < numberofmessages <= self.maxmessages:
+                logger.info('Running comic command with: {}'.format(numberofmessages))
                 messages=[]
                 async for message in self.bot.logs_from(channel, numberofmessages, before=ctx.message):
                     messages.append(message)
