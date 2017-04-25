@@ -22,7 +22,13 @@ class Weedbot:
         self.gen = ComicGenerator.ComicGenerator()
         self.maxmessages = maxmessages
 
-        
+    async def send_image(self, channel, img):
+        img_io = io.BytesIO()
+        img.save(img_io, 'JPEG', quality=90)
+        img_io.seek(0)
+        await self.bot.send_file(channel, img_io, filename='weedbot.jpg')
+        img_io.close()
+   
     @commands.command(pass_context=True, no_pm=True)
     async def comic(self, ctx, numberofmessages):
         """Create an comic from the last x messages and post it.
@@ -39,11 +45,7 @@ class Weedbot:
                 async for message in self.bot.logs_from(channel, numberofmessages, before=ctx.message):
                     messages.append(message)
                 img = self.gen.make_comic(messages)
-                img_io = io.BytesIO()
-                img.save(img_io, 'JPEG', quality=90)
-                img_io.seek(0)
-                await self.bot.send_file(channel, img_io, filename='weedbot.jpg')
-                img_io.close()
+                await self.send_image(channel, img)
             else:
                 await self.bot.say("Must be from 1 to {}.".format(maxmessages))
 
