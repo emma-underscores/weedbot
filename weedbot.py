@@ -52,7 +52,9 @@ class Weedbot:
    
     @commands.command(pass_context=True, no_pm=True, aliases=['Comic','weed','weedbot'])
     async def comic(self, ctx, numberofmessages=None):
-        """Create an comic from the last x messages and post it.
+        """Create an comic from the last few messages and post it.
+Uses recent messages posted within 2 minutes of each other, up to 3 people and 10 messages.
+Can also use input of 1 to 10 to use last x messages instead.
         """
         channel = ctx.message.channel
         if numberofmessages is None:
