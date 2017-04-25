@@ -65,8 +65,7 @@ Can also use input of 1 to 10 to use last x messages instead.
             messages = self.auto_filter_messages(unfilteredmessages)
             img = self.gen.make_comic(messages)
             await self.send_image(channel, img)
-            if self.bot.permissions_in(channel).manage_messages:
-                await self.bot.delete_message(ctx.message)
+            await self.bot.delete_message(ctx.message)
             return
         try:
             numberofmessages = int(numberofmessages)
@@ -80,8 +79,7 @@ Can also use input of 1 to 10 to use last x messages instead.
                     messages.append(message)
                 img = self.gen.make_comic(messages)
                 await self.send_image(channel, img)
-                if self.bot.permissions_in(channel).manage_messages:
-                    await self.bot.delete_message(ctx.message)
+                await self.bot.delete_message(ctx.message)
             else:
                 await self.bot.say("Must be from 1 to {}.".format(maxmessages))
 
