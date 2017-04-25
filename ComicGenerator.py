@@ -22,10 +22,10 @@ class ComicGenerator:
         panel = []
         for msg in msgs:
             # if we already have a full panel (two speakers, or consecutive msg speaker), create a new panel
-            if len(panel) >= 2 or (len(panel) == 1 and panel[0][0] == msg.author):
+            if len(panel) >= 2 or (len(panel) == 1 and panel[0][0] == msg.author.id):
                 panels.append(panel)
                 panel = []
-            panel.append((msg.author,
+            panel.append((msg.author.id,
                 # tidy up custom emotes and replace unicode emotes with names
                 # todo: skintone stuff
                 #([/U0001F3FB-/U0001F3FF][\u261D\u2639\u263A\u26F9\u270A-\u270D\U0001F385\U0001F3C2-\U0001FC4\U0001FC7\U0001F3CA-\U0001F3CC\U0001F442\U0001F443\U0001F446-\U0001F450\U0001F466-\U0001F478\U0001F47C\U0001F481-\U0001F483\U0001F486\U0001F487\U0001F48F\U0001F491\U0001F4AA\U0001F590-\U0001F596\U0001F600-\U0001F637\U0001F641-\U0001F647\U0001F64B-\U0001F64F\U0001F6A3\U0001F6B4-\U0001F6B6\U0001F6C0\U0001F910-\U0001F915\U0001F917\U0001F918])|
@@ -93,13 +93,13 @@ class ComicGenerator:
         characters = set()
         for msg in msgs:
             trimmed.append(msg)
-            characters.add(msg.author)
+            characters.add(msg.author.id)
            # if msgs[i]["time"] - msgs[i-1]["time"] > 120:
            #     break
-            if len(characters) > 3:
-                break
-            if len(trimmed) > 10:
-                break
+           # if len(characters) > 3:
+           #     break
+           # if len(trimmed) > 10:
+           #     break
         trimmed.reverse()
 
         # panels is now a list of nick, msg
